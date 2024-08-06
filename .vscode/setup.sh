@@ -9,7 +9,6 @@ CLI_INSTALLED="$(pwd)/cli/decky"
 
 echo "If you are using alpine linux, do not expect any support."
 if [[ "$PNPM_INSTALLED" =~ "which" ]]; then
-    echo "pnpm is not currently installed, you can install it via your distro's package managment system or via a script that will attempt to do a manual install based on your system. If you wish to proceed with installing via the script then answer "no" (capitals do not matter) and proceed with the rest of the script. Otherwise, just hit enter to proceed and use the script."
     read run_pnpm_script
     if [[ "$run_pnpm_script" =~ "n" ]]; then
         echo "You have chose to install pnpm via npm or your distros package manager. Please make sure to do so before attempting to build your plugin."

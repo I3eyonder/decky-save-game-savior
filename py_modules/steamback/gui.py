@@ -74,7 +74,7 @@ class GUI:
 
         self.set_app_icon()
 
-        root.title("Steamback")
+        root.title("Decky Save Game Savior")
         root.resizable(width=800, height=400)
 
         """Save window position on exit"""

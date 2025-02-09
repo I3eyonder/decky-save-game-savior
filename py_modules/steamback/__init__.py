@@ -69,7 +69,7 @@ class Engine:
         #    logger.info('Running under decky')
         # except:
 
-        logger.info(f'Steamback engine created: { config }')
+        logger.info(f'Decky Save Game Savior engine created: { config }')
 
         # a dict from gameid -> gameinfo for all installed games.  ONLY USED ON DESKTOP not DECKY
         self.all_games = None

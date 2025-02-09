@@ -78,11 +78,11 @@ class Plugin:
 
     # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
     async def _main(self):
-        logger.info("Steamback running!")
+        logger.info("Decky Save Game Savior running!")
 
     # Function called first during the unload process, utilize this to handle your plugin being removed
     async def _unload(self):
-        logger.info("Steamback exiting!")
+        logger.info("Decky Save Game Savior exiting!")
 
 
 """

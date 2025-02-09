@@ -29,7 +29,7 @@ def main():
 
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
     logger = logging.getLogger()
-    logger.info('Steamback running...')
+    logger.info('Decky Save Game Savior running...')
 
     # FIXME - I bet the following will need tweaking for Windows
     plat_sys = platform.system()
@@ -62,8 +62,8 @@ def main():
             f'Can\'t find steam directory at { steam_dir }, exiting...')
         return
 
-    app_name = "steamback"
-    app_author = "geeksville"
+    app_name = "decky-save-game-savior"
+    app_author = "I3eyonder"
     app_dir = platformdirs.user_data_dir(app_name, app_author)
     logger.info(f'Storing application data in { app_dir }')
 

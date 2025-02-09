@@ -95,7 +95,7 @@ async function makeGameInfo(game_id: number): Promise<GameInfo> {
 async function doBackup(gameInfo: GameInfo) {
   // we check when the game is launched _or_ landed because steam cloud might have updated it from some other PC      
   try {
-    console.log("Steamback backup game: ", gameInfo)
+    console.log("Decky Save Game Savior backup game: ", gameInfo)
     const r = await gServerAPI!.callPluginMethod("do_backup", {
       game_info: gameInfo,
       dry_run: false
@@ -105,16 +105,16 @@ async function doBackup(gameInfo: GameInfo) {
       throw new Error('do_backup failed')
 
     const saveinfo = r.result as SaveInfo
-    console.log("steamback backup results", saveinfo)
+    console.log("Decky Save Game Savior backup results", saveinfo)
     if (saveinfo)
       gServerAPI!.toaster.toast({
-        title: 'Steamback',
+        title: 'Decky Save Game Savior',
         body: `${gameInfo.game_name} snapshot taken`,
         icon: <FiDownload />,
       });
   }
   catch (error: any) {
-    console.error('Steamback backup', error)
+    console.error('Decky Save Game Savior backup', error)
   }
 }
 
@@ -159,7 +159,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
       // console.log("steamback saveinfos", saveinfo.result)
       setSaveInfos(saveinfo.result as SaveInfo[])
     }).catch(e => {
-      console.error("steamback saveinfos failed", e)
+      console.error("Decky Save Game Savior saveinfos failed", e)
     })
   }
 
@@ -172,10 +172,10 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
         game_info: gameInfo,
         dry_run: true
       }).then(saveinfo => {
-        console.log("steamback dry run result", saveinfo.result)
+        console.log("Decky Save Game Savior dry run result", saveinfo.result)
         setDryRunGameInfo(saveinfo.result ? gameInfo : undefined)
       }).catch(e => {
-        console.error("steamback dryrun failed", e)
+        console.error("Decky Save Game Savior dryrun failed", e)
       })
     }
   }
@@ -227,18 +227,18 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
           const agoStr = timeAgo.format(date)
 
           const doRestore = () => {
-            console.info('Doing steamback restore', si)
+            console.info('Doing Decky Save Game Savior restore', si)
             serverAPI.callPluginMethod("do_restore", {
               save_info: si
             }).then(() => {
               serverAPI.toaster.toast({
-                title: 'Steamback',
+                title: 'Decky Save Game Savior',
                 body: `Reverted ${si.game_info.game_name} from snapshot`,
                 icon: <FiUpload />,
               })
               Navigation.Navigate(`/library/app/${si.game_info.game_id}`)
             }).catch(error =>
-              console.error('Steamback restore', error)
+              console.error('Decky Save Game Savior restore', error)
             )
           }
 
@@ -263,7 +263,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
           // console.log("running apps", runningApps, si.game_id, runningApps.has(si.game_id))
           const buttonText = si.is_undo ? `Undo` : `Revert`
           const labelText = si.game_info.game_name
-          const descText = si.is_undo ? `Reverts recent Steamback changes` : `Snapshot from ${dateStr} (${agoStr})`
+          const descText = si.is_undo ? `Reverts recent Save Game Savior changes` : `Snapshot from ${dateStr} (${agoStr})`
           // bottomSeparator="none" label="some label" layout="below"
           return <PanelSectionRow>
             <ButtonItem onClick={askRestore}
@@ -300,7 +300,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
         Navigation.NavigateToExternalWeb(
           `${helpUrl}`
         )
-      }}>Steamback</a> automatically makes save-game snapshots for many Steam games. See our github page for more information.</span>
+      }}>Decky Save Game Savior</a> automatically makes save-game snapshots for many Steam games. See our github page for more information.</span>
 
       {getRunningBackupHtml()}
       {snapshotHtml}
@@ -321,7 +321,7 @@ export default definePlugin((serverApi: ServerAPI) => {
   gServerAPI = serverApi
 
   const taskHook = SteamClient.GameSessions.RegisterForAppLifetimeNotifications(async (n: LifetimeNotification) => {
-    console.log("Steamback AppLifetimeNotification", n);
+    console.log("Decky Save Game Savior AppLifetimeNotification", n);
 
     const gameInfo: GameInfo = await makeGameInfo(n.unAppID)
 
@@ -336,11 +336,11 @@ export default definePlugin((serverApi: ServerAPI) => {
   serverApi.callPluginMethod("set_account_id", {
     id_num: sid.accountid
   }).catch(e =>
-    console.error("Can't set steamback account", e)
+    console.error("Can't set Decky Save Game Savior account", e)
   )
 
   return {
-    title: <div className={staticClasses.Title}>Steamback</div>,
+    title: <div className={staticClasses.Title}>Decky Save Game Savior</div>,
     content: <SteambackContent serverAPI={serverApi} />,
     icon: <FiDownload />,
     onDismount() {

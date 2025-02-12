@@ -75,6 +75,9 @@ class Plugin:
     """
     async def get_saveinfos(self) -> list[dict]:
         return await get_engine().get_saveinfos()
+    
+    async def get_last_used_save_info(self) -> dict:
+        return await get_engine().get_last_used_save_info()
 
     # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
     async def _main(self):

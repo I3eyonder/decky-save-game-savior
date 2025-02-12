@@ -79,6 +79,7 @@ class Engine:
 
         # don't generate backups if the files haven't changed since last backup
         self.ignore_unchanged = True
+        self.last_used_save_info = None
 
     def add_account_id(self, id_num: int):
         logger.debug(f'Setting account id { id_num } on { self }')
@@ -731,6 +732,7 @@ class Engine:
 
         # we now might have too many undos, so possibly delete one
         await self._cull_old_saves()
+        self.last_used_save_info = save_info
 
     """
     Given a list of game_infos, return a list of game_infos which are supported for backups
@@ -799,3 +801,7 @@ class Engine:
         saves = list(filter(lambda i: not i["is_undo"], infos))
         infos = undos + saves
         return infos
+
+    async def get_last_used_save_info(self) -> dict:
+        logger.info('Attempting get last used save info')
+        return self.last_used_save_info

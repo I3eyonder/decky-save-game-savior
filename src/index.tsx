@@ -61,7 +61,7 @@ async function getMounted() {
     dirs: folders.map(f => f.strFolderPath)
   })
 
-  if(!r.success) throw new Error('find_mounted failed')
+  if (!r.success) throw new Error('find_mounted failed')
   const mounted = r.result as string[]
 
   const filteredFolders = folders.filter(f => mounted.includes(f.strFolderPath))
@@ -90,7 +90,7 @@ async function makeGameInfo(game_id: number): Promise<GameInfo> {
     }
   }
   throw new Error(`game_info not found for ${game_id}`)
-}  
+}
 
 async function doBackup(gameInfo: GameInfo) {
   // we check when the game is launched _or_ landed because steam cloud might have updated it from some other PC      
@@ -101,7 +101,7 @@ async function doBackup(gameInfo: GameInfo) {
       dry_run: false
     })
 
-    if(!r.success)
+    if (!r.success)
       throw new Error('do_backup failed')
 
     const saveinfo = r.result as SaveInfo
@@ -122,6 +122,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
   const [saveInfos, setSaveInfos] = useState<SaveInfo[]>([])
   const [supportedGameInfos, setSupportedGameInfos] = useState<GameInfo[] | undefined>(undefined)
   const [dryRunGameInfo, setDryRunGameInfo] = useState<GameInfo | undefined>(undefined)
+  const [lastUsedSaveInfo, setLastUsedSaveInfo] = useState<SaveInfo | undefined>(undefined)
 
   // Create formatter (English).
   const timeAgo = new TimeAgo('en-US')
@@ -165,7 +166,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
 
   // Get the info for the currently running game (if it could be saved now)
   async function getSaveNow() {
-    if(gRunningGameInfo !== undefined) {
+    if (gRunningGameInfo !== undefined) {
       const gameInfo = gRunningGameInfo
       console.log("Checking running save info: ", gameInfo)
       serverAPI.callPluginMethod("do_backup", {
@@ -180,15 +181,27 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
     }
   }
 
+  // Get last used save game
+  async function getLastUsedSaveInfo() {
+    serverAPI.callPluginMethod("get_last_used_save_info", {}).then(saveinfo => {
+      let si = saveinfo.result as SaveInfo
+      console.info(`get_last_used_save_info`, si)
+      setLastUsedSaveInfo(si ? si : undefined)
+    }).catch(e => {
+      console.error("Decky Save Game Savior get last used save info failed", e)
+    })
+  }
+
   useEffect(() => {
     getSupported()
     getSaveInfos()
     getSaveNow()
+    getLastUsedSaveInfo()
   }, []) // extra [] at end means only run for first render
 
   // Show a button to backup the currently running game
   function getRunningBackupHtml(): JSX.Element {
-    if(dryRunGameInfo === undefined)
+    if (dryRunGameInfo === undefined)
       return <div></div>
 
     const gameInfo = dryRunGameInfo!
@@ -202,16 +215,75 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
     const buttonText = "Backup now"
     const labelText = gameInfo.game_name
     const descText = "Attempts to backup the currently running game"
-    return <PanelSectionRow>
+    return <PanelSection title="Backup now">
+      <PanelSectionRow>
         <ButtonItem onClick={doBackupNow}
           icon={<FiDownload />}
           description={descText}
           label={labelText}>
           {buttonText}
         </ButtonItem>
-      </PanelSectionRow>  
+      </PanelSectionRow>
+    </PanelSection>
   }
 
+  // Show reused button
+  function getLastUsedSaveHtml(): JSX.Element {
+    if (lastUsedSaveInfo === undefined)
+      return <span style={{ padding: '1rem', display: 'block' }}>No last used save game yet</span>
+
+    const saveInfo = lastUsedSaveInfo!
+    const date = new Date(saveInfo.timestamp)
+    const dateStr = date.toLocaleString()
+    const agoStr = timeAgo.format(date)
+
+    const doReuse = () => {
+      console.info('Doing Decky Save Game Savior reuse', saveInfo)
+      serverAPI.callPluginMethod("do_restore", {
+        save_info: saveInfo
+      }).then(() => {
+        serverAPI.toaster.toast({
+          title: 'Decky Save Game Savior',
+          body: `Reverted ${saveInfo.game_info.game_name} from snapshot`,
+          icon: <FiUpload />,
+        })
+        Navigation.Navigate(`/library/app/${saveInfo.game_info.game_id}`)
+      }).catch(error =>
+        console.error('Decky Save Game Savior reused', error)
+      )
+    }
+
+    // raise a modal dialog to confirm the user wants to restore
+    function askReuse() {
+      const title = "Re-use snapshot"
+      const message = `Are you sure you want to re-use ${saveInfo.game_info.game_name} snapshot from ${dateStr} (${agoStr})?`
+
+      Navigation.CloseSideMenus() // close decky UI (user will see notification when restore completes)
+      showModal(
+        <ConfirmModal
+          onOK={doReuse}
+          strTitle={title}
+          strDescription={message}
+        />, window
+      )
+    }
+
+    const runningApps = new Set(Router.RunningApps.map(a => parseInt(a.appid)))
+    // console.log("running apps", runningApps, si.game_id, runningApps.has(si.game_id))
+    const buttonText = `Reuse`
+    const labelText = saveInfo.game_info.game_name
+    const descText = `Snapshot from ${dateStr} (${agoStr})`
+    // bottomSeparator="none" label="some label" layout="below"
+    return <PanelSectionRow>
+      <ButtonItem onClick={askReuse}
+        icon={<FiUpload />}
+        disabled={runningApps.has(saveInfo.game_info.game_id)} // Don't let user restore files while game is running
+        description={descText}
+        label={labelText}>
+        {buttonText}
+      </ButtonItem>
+    </PanelSectionRow>
+  }
 
   /// Only show snapshot section if we have some saveinfos
   // removed alpha disclaimer: <span style={{ padding: '1rem', display: 'block' }}>This plugin is currently in <b>alpha</b> testing, if you see problems use the 'Undo' button and let us know.  </span>
@@ -231,6 +303,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
             serverAPI.callPluginMethod("do_restore", {
               save_info: si
             }).then(() => {
+              // setLastUsedSaveInfo(lastUsedSaveInfo)
               serverAPI.toaster.toast({
                 title: 'Decky Save Game Savior',
                 body: `Reverted ${si.game_info.game_name} from snapshot`,
@@ -303,6 +376,9 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
       }}>Decky Save Game Savior</a> automatically makes save-game snapshots for many Steam games. See our github page for more information.</span>
 
       {getRunningBackupHtml()}
+      <PanelSection title="Last used">
+        {getLastUsedSaveHtml()}
+      </PanelSection>
       {snapshotHtml}
 
       <PanelSection title="Supported games">
@@ -326,7 +402,7 @@ export default definePlugin((serverApi: ServerAPI) => {
     const gameInfo: GameInfo = await makeGameInfo(n.unAppID)
 
     // Update the global that the GUI uses for 'backup now' button
-    gRunningGameInfo = n.bRunning ? gameInfo : undefined 
+    gRunningGameInfo = n.bRunning ? gameInfo : undefined
     return doBackup(gameInfo)
   })
 

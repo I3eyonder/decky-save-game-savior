@@ -78,6 +78,9 @@ class Plugin:
     
     async def get_last_used_save_info(self) -> dict:
         return await get_engine().get_last_used_save_info()
+    
+    async def do_reuse(self):
+        return await get_engine().do_reuse()
 
     # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
     async def _main(self):

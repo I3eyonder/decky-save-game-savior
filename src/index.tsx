@@ -227,7 +227,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
     </PanelSection>
   }
 
-  // Show reused button
+  // Show reuse button
   function getLastUsedSaveHtml(): JSX.Element {
     if (lastUsedSaveInfo === undefined)
       return <span style={{ padding: '1rem', display: 'block' }}>No last used save game yet</span>
@@ -239,9 +239,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
 
     const doReuse = () => {
       console.info('Doing Decky Save Game Savior reuse', saveInfo)
-      serverAPI.callPluginMethod("do_restore", {
-        save_info: saveInfo
-      }).then(() => {
+      serverAPI.callPluginMethod("do_reuse", {}).then(() => {
         serverAPI.toaster.toast({
           title: 'Decky Save Game Savior',
           body: `Reverted ${saveInfo.game_info.game_name} from snapshot`,
@@ -255,8 +253,8 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
 
     // raise a modal dialog to confirm the user wants to restore
     function askReuse() {
-      const title = "Re-use snapshot"
-      const message = `Are you sure you want to re-use ${saveInfo.game_info.game_name} snapshot from ${dateStr} (${agoStr})?`
+      const title = "Reuse snapshot"
+      const message = `Are you sure you want to reuse ${saveInfo.game_info.game_name} snapshot from ${dateStr} (${agoStr})?`
 
       Navigation.CloseSideMenus() // close decky UI (user will see notification when restore completes)
       showModal(
@@ -303,7 +301,6 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
             serverAPI.callPluginMethod("do_restore", {
               save_info: si
             }).then(() => {
-              // setLastUsedSaveInfo(lastUsedSaveInfo)
               serverAPI.toaster.toast({
                 title: 'Decky Save Game Savior',
                 body: `Reverted ${si.game_info.game_name} from snapshot`,

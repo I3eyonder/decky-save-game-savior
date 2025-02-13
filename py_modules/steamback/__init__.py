@@ -805,3 +805,18 @@ class Engine:
     async def get_last_used_save_info(self) -> dict:
         logger.info('Attempting get last used save info')
         return self.last_used_save_info
+    
+    async def do_reuse(self):
+        # logger.debug(f'In do_reuse')
+        save_info = self.last_used_save_info
+        if save_info == None:
+            return
+        game_info = save_info["game_info"]
+        rcf = self._read_rcf(game_info)
+        assert rcf
+        self._copy_all_from_saveinfo(save_info, rcf)
+        # make new save info
+        logger.info('Generating new save files for reuse')
+        reuse_info = self._create_savedir(game_info)
+        self._copy_all_to_saveinfo(reuse_info, rcf)
+        self.last_used_save_info = reuse_info

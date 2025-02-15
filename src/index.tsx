@@ -11,13 +11,15 @@ import {
   ConfirmModal,
   Navigation,
   AppOverview,
-  Router
+  Router,
 } from "decky-frontend-lib"
 import { VFC, useState, useEffect } from "react"
 import { FiDownload, FiUpload } from "react-icons/fi"
+import { MdDelete } from "react-icons/md"
 import SteamID from "steamid"
 import TimeAgo from "javascript-time-ago"
 import en from "javascript-time-ago/locale/en"
+import SnapshotSectionRow from "./component/SnapshotSectionRow"
 
 
 // FIXME - find a better source for these defs?, I'm hand specifying here
@@ -329,21 +331,50 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
             )
           }
 
+          const doDelete = () => {
+            console.info('Doing Decky Save Game Savior delete', si)
+            serverAPI.callPluginMethod("do_delete", {
+              save_info: si
+            }).then(() => {
+              serverAPI.toaster.toast({
+                title: 'Decky Save Game Savior',
+                body: `Deleted snapshot at ${dateStr} of ${si.game_info.game_name}`,
+                icon: <MdDelete />,
+              })
+            }).catch(error =>
+              console.error('Decky Save Game Savior delete', error)
+            )
+          }
+
+          // raise a modal dialog to confirm the user wants to delete
+          function askDelete() {
+            const title = "Delete snapshot"
+            const message = `Are you sure you want to delete your snapshot at ${dateStr} of ${si.game_info.game_name}?`
+
+            showModal(
+              <ConfirmModal
+                onOK={doDelete}
+                strTitle={title}
+                strDescription={message}
+              />, window
+            )
+          }
+
           const runningApps = new Set(Router.RunningApps.map(a => parseInt(a.appid)))
           // console.log("running apps", runningApps, si.game_id, runningApps.has(si.game_id))
           const buttonText = si.is_undo ? `Undo` : `Revert`
           const labelText = si.game_info.game_name
           const descText = si.is_undo ? `Reverts recent Save Game Savior changes` : `Snapshot from ${dateStr} (${agoStr})`
           // bottomSeparator="none" label="some label" layout="below"
-          return <PanelSectionRow>
-            <ButtonItem onClick={askRestore}
-              icon={<FiUpload />}
-              disabled={runningApps.has(si.game_info.game_id)} // Don't let user restore files while game is running
-              description={descText}
-              label={labelText}>
-              {buttonText}
-            </ButtonItem>
-          </PanelSectionRow>
+          return <SnapshotSectionRow onClick={askRestore}
+            icon={<FiUpload />}
+            disabled={runningApps.has(si.game_info.game_id)}
+            description={descText}
+            label={labelText}
+            buttonText={buttonText}
+            additionalButtonIcon={<MdDelete />}
+            additionalButtonOnClick={askDelete}>
+          </SnapshotSectionRow>
         })
       }
     </PanelSection>

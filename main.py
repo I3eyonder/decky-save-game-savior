@@ -81,6 +81,9 @@ class Plugin:
     
     async def do_reuse(self):
         return await get_engine().do_reuse()
+    
+    async def do_delete(self, save_info: dict):
+        return await get_engine().do_delete(save_info)
 
     # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
     async def _main(self):

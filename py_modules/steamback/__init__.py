@@ -820,3 +820,8 @@ class Engine:
         reuse_info = self._create_savedir(game_info)
         self._copy_all_to_saveinfo(reuse_info, rcf)
         self.last_used_save_info = reuse_info
+        self.do_delete(save_info)
+
+    async def do_delete(self, save_info: dict):
+        # logger.debug(f'In do_delete')
+        self._delete_savedir(save_info["filename"])

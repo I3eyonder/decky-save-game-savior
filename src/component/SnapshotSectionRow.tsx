@@ -29,7 +29,7 @@ const SnapshotSectionRow: FC<SnapshotSectionRowProps> = ({ icon, buttonText, dis
                     <div style={{ fontSize: '1em', display: 'flex', alignItems: 'center', height: '100%' }}>{icon}</div>
                     <span style={{ marginLeft: '.5em', fontSize: '1em' }}>{label}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: 'flex' }}>
                     <DialogButton onClick={onClick}
                         disabled={disabled}
                         style={{ padding: '10px', fontSize: '14px' }}

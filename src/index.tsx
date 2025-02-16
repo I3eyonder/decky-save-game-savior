@@ -232,7 +232,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
   // Show reuse button
   function getLastUsedSaveHtml(): JSX.Element {
     if (lastUsedSaveInfo === undefined)
-      return <span style={{ padding: '1rem', display: 'block' }}>No last used save game yet</span>
+      return <div></div>
 
     const saveInfo = lastUsedSaveInfo!
     const date = new Date(saveInfo.timestamp)
@@ -274,15 +274,18 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
     const labelText = saveInfo.game_info.game_name
     const descText = `Snapshot from ${dateStr} (${agoStr})`
     // bottomSeparator="none" label="some label" layout="below"
-    return <PanelSectionRow>
-      <ButtonItem onClick={askReuse}
-        icon={<FiUpload />}
-        disabled={runningApps.has(saveInfo.game_info.game_id)} // Don't let user restore files while game is running
-        description={descText}
-        label={labelText}>
-        {buttonText}
-      </ButtonItem>
-    </PanelSectionRow>
+    return <PanelSection title="Last used">
+      <PanelSectionRow>
+        <ButtonItem onClick={askReuse}
+          icon={<FiUpload />}
+          disabled={runningApps.has(saveInfo.game_info.game_id)} // Don't let user restore files while game is running
+          description={descText}
+          label={labelText}>
+          {buttonText}
+        </ButtonItem>
+      </PanelSectionRow>
+    </PanelSection>
+
   }
 
   /// Only show snapshot section if we have some saveinfos
@@ -404,9 +407,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
       }}>Decky Save Game Savior</a> automatically makes save-game snapshots for many Steam games. See our github page for more information.</span>
 
       {getRunningBackupHtml()}
-      <PanelSection title="Last used">
-        {getLastUsedSaveHtml()}
-      </PanelSection>
+      {getLastUsedSaveHtml()}
       {snapshotHtml}
 
       <PanelSection title="Supported games">

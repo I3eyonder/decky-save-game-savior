@@ -24,9 +24,9 @@ const SnapshotSectionRow: FC<SnapshotSectionRowProps> = ({ icon, buttonText, dis
             spacingBetweenLabelAndChild="none"
             childrenContainerWidth="max"
         >
-            <Focusable style={{ display: 'flex', flexWrap:'wrap', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <div style={{ display: 'flex', fontSize: '1em', justifyContent: 'center', alignItems: 'center', marginRight: '.5em' }}>
-                    <div style={{ fontSize: '1em', display: 'flex', alignItems: 'center', height: '100%' }}>{icon}</div>
+            <Focusable style={{ width: '100%', display:'grid' }}>
+                <div>
+                    <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>{icon}</div>
                     <span style={{ marginLeft: '.5em', fontSize: '1em' }}>{label}</span>
                 </div>
                 <div style={{ display: 'flex' }}>
@@ -39,13 +39,13 @@ const SnapshotSectionRow: FC<SnapshotSectionRowProps> = ({ icon, buttonText, dis
                     {additionalButtonIcon && (
                         <DialogButton
                             onClick={additionalButtonOnClick}
-                            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '10px', maxWidth: '40px', minWidth: 'auto', marginLeft: '.5em' }}
+                            style={{ padding: '10px', maxWidth: '40px', minWidth: 'auto', marginLeft: '.5em' }}
                         >
                             {additionalButtonIcon}
                         </DialogButton>
                     )}
                 </div>
-                <div style={{ marginTop: '.5em', fontSize: '0.7em', width: '100%' }}>
+                <div style={{ marginTop: '.2em', fontSize: '0.7em', width: '100%' }}>
                     {description}
                 </div>
             </Focusable>

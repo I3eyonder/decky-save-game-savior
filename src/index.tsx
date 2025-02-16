@@ -210,7 +210,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
 
     async function doBackupNow() {
       await doBackup(gameInfo)
-      setSaveInfos(saveInfos) // force a redraw of the saveinfo GUI list
+      getSaveInfos()
       setDryRunGameInfo(undefined) // we just did a save so until things change we can't do another
     }
 

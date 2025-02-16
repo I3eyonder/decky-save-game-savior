@@ -807,21 +807,25 @@ class Engine:
         return self.last_used_save_info
     
     async def do_reuse(self):
-        # logger.debug(f'In do_reuse')
+        logger.debug(f'In do_reuse')
         save_info = self.last_used_save_info
         if save_info == None:
             return
         game_info = save_info["game_info"]
         rcf = self._read_rcf(game_info)
         assert rcf
+        # copy last used save to steam
         self._copy_all_from_saveinfo(save_info, rcf)
         # make new save info
         logger.info('Generating new save files for reuse')
         reuse_info = self._create_savedir(game_info)
+        # copy from steam to new reuse_info
         self._copy_all_to_saveinfo(reuse_info, rcf)
+        # set new generated reuse_info to last used save
         self.last_used_save_info = reuse_info
-        self.do_delete(save_info)
+        # delete previous last used save
+        await self.do_delete(save_info)
 
     async def do_delete(self, save_info: dict):
-        # logger.debug(f'In do_delete')
+        logger.debug(f'In do_delete { save_info }')
         self._delete_savedir(save_info["filename"])

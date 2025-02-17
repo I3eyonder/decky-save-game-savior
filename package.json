@@ -1,6 +1,6 @@
 {
   "name": "decky-save-game-savior",
-  "version": "0.0.4-beta",
+  "version": "0.0.5-beta",
   "description": "Steamdeck save game savior",
   "scripts": {
     "build": "shx rm -rf dist && rollup -c",

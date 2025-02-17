@@ -47,8 +47,8 @@ class Plugin:
     SaveInfo is a dict with filename, game_id, timestamp, is_undo
     game_info is a dict of game_id and install_root
     """
-    async def do_backup(self, game_info: dict, dry_run: bool) -> dict:
-        return await get_engine().do_backup(game_info, dry_run)
+    async def do_backup(self, game_info: dict, apply_last_used:bool, dry_run: bool) -> dict:
+        return await get_engine().do_backup(game_info, apply_last_used, dry_run)
 
     """
     Restore a particular savegame using the saveinfo object

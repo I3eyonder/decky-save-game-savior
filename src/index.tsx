@@ -1,9 +1,7 @@
 import {
-  ButtonItem,
   definePlugin,
   // Menu, MenuItem, showContextMenu,
   PanelSection,
-  PanelSectionRow,
   ServerAPI,
   staticClasses,
   LifetimeNotification,
@@ -74,12 +72,13 @@ async function makeGameInfo(game_id: number): Promise<GameInfo> {
   throw new Error(`game_info not found for ${game_id}`)
 }
 
-async function doBackup(gameInfo: GameInfo) {
+async function doBackup(gameInfo: GameInfo, applyLastUsed: boolean = false) {
   // we check when the game is launched _or_ landed because steam cloud might have updated it from some other PC      
   try {
     console.log("Decky Save Game Savior backup game: ", gameInfo)
     const r = await gServerAPI!.callPluginMethod("do_backup", {
       game_info: gameInfo,
+      apply_last_used: applyLastUsed,
       dry_run: false
     })
 
@@ -188,24 +187,37 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
 
     const gameInfo = dryRunGameInfo!
 
-    async function doBackupNow() {
-      await doBackup(gameInfo)
+    async function doBackupNow(applyLastUsed: boolean = false) {
+      await doBackup(gameInfo, applyLastUsed)
       getSaveInfos()
+      if (applyLastUsed) {
+        getLastUsedSaveInfo()
+      }
       setDryRunGameInfo(undefined) // we just did a save so until things change we can't do another
     }
 
-    const buttonText = "Backup now"
     const labelText = gameInfo.game_name
     const descText = "Attempts to backup the currently running game"
+    const primaryButton: ButtonConfig = {
+      content: `Backup now`,
+      onClick: () => {
+        doBackupNow()
+      }
+    }
+    const secondaryButton: ButtonConfig = {
+      content: `Backup and set last used now`,
+      onClick: () => {
+        doBackupNow(true)
+      }
+    }
     return <PanelSection title="Backup now">
-      <PanelSectionRow>
-        <ButtonItem onClick={doBackupNow}
-          icon={<FiDownload />}
-          description={descText}
-          label={labelText}>
-          {buttonText}
-        </ButtonItem>
-      </PanelSectionRow>
+      <SnapshotButtonItem
+        icon={<FiDownload />}
+        description={descText}
+        label={labelText}
+        primaryButtonConfig={primaryButton}
+        secondaryButtonConfig={secondaryButton}>
+      </SnapshotButtonItem>
     </PanelSection>
   }
 
@@ -250,20 +262,20 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
 
     const runningApps = new Set(Router.RunningApps.map(a => parseInt(a.appid)))
     // console.log("running apps", runningApps, si.game_id, runningApps.has(si.game_id))
-    const buttonText = `Reuse`
     const labelText = saveInfo.game_info.game_name
     const descText = `Snapshot from ${dateStr} (${agoStr})`
-    // bottomSeparator="none" label="some label" layout="below"
+    const primaryButton: ButtonConfig = {
+      content: `Reuse`,
+      onClick: askReuse,
+      disabled: runningApps.has(saveInfo.game_info.game_id)
+    }
     return <PanelSection title="Last used">
-      <PanelSectionRow>
-        <ButtonItem onClick={askReuse}
-          icon={<FiUpload />}
-          disabled={runningApps.has(saveInfo.game_info.game_id)} // Don't let user restore files while game is running
-          description={descText}
-          label={labelText}>
-          {buttonText}
-        </ButtonItem>
-      </PanelSectionRow>
+      <SnapshotButtonItem
+        icon={<FiDownload />}
+        description={descText}
+        label={labelText}
+        primaryButtonConfig={primaryButton}>
+      </SnapshotButtonItem>
     </PanelSection>
 
   }
@@ -356,7 +368,10 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
           const secondaryButton: ButtonConfig = {
             content: <MdDelete />,
             onClick: askDelete,
-            disabled: false
+            disabled: false,
+            extraStyle: {
+              maxWidth: '40px'
+            }
           }
           return <SnapshotButtonItem
             icon={<FiUpload />}

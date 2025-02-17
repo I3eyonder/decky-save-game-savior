@@ -19,7 +19,8 @@ import { MdDelete } from "react-icons/md"
 import SteamID from "steamid"
 import TimeAgo from "javascript-time-ago"
 import en from "javascript-time-ago/locale/en"
-import SnapshotSectionRow from "./component/SnapshotSectionRow"
+import { ButtonConfig, SnapshotButtonItem } from "./component"
+import { GameInfo, SaveInfo } from "./model"
 
 
 // FIXME - find a better source for these defs?, I'm hand specifying here
@@ -29,27 +30,6 @@ declare let App: any // used for m_currentUser
 declare namespace appStore {
   function GetAppOverviewByGameID(appId: number): AppOverview
 }
-
-/**
- * Used to provide context to do_backup
- */
-interface GameInfo {
-  game_id: number
-  game_name: string // The display name for this game (required by python install directory search)
-  install_root: string // where the files are installed.  Normally from SteamClient.InstallFolder.GetInstallFolders()
-  save_games_root?: string // only populated by python, optional when generated in javascript
-}
-
-/**
- * A result object from do_backup or get_saveinfos
- */
-interface SaveInfo {
-  game_info: GameInfo
-  timestamp: number
-  filename: string
-  is_undo: boolean
-}
-
 
 let gServerAPI: ServerAPI | undefined = undefined
 let gRunningGameInfo = undefined as GameInfo | undefined
@@ -368,16 +348,23 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
           const buttonText = si.is_undo ? `Undo` : `Revert`
           const labelText = si.game_info.game_name
           const descText = si.is_undo ? `Reverts recent Save Game Savior changes` : `Snapshot from ${dateStr} (${agoStr})`
-          // bottomSeparator="none" label="some label" layout="below"
-          return <SnapshotSectionRow onClick={askRestore}
+          const primaryButton: ButtonConfig = {
+            content: buttonText,
+            onClick: askRestore,
+            disabled: runningApps.has(si.game_info.game_id)
+          }
+          const secondaryButton: ButtonConfig = {
+            content: <MdDelete />,
+            onClick: askDelete,
+            disabled: false
+          }
+          return <SnapshotButtonItem
             icon={<FiUpload />}
-            disabled={runningApps.has(si.game_info.game_id)}
             description={descText}
             label={labelText}
-            buttonText={buttonText}
-            additionalButtonIcon={<MdDelete />}
-            additionalButtonOnClick={askDelete}>
-          </SnapshotSectionRow>
+            primaryButtonConfig={primaryButton}
+            secondaryButtonConfig={secondaryButton}>
+          </SnapshotButtonItem>
         })
       }
     </PanelSection>

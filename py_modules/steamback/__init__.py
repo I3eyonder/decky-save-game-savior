@@ -611,7 +611,7 @@ class Engine:
                 pass
 
     """
-    we keep only the most recent undo and the most recent 10 saves
+    we keep only the most recent undo and the most recent 50 saves
     """
     async def _cull_old_saves(self):
         infos = await self.get_saveinfos()
@@ -619,12 +619,26 @@ class Engine:
         undos = list(filter(lambda i: i["is_undo"], infos))
         saves = list(filter(lambda i: not i["is_undo"], infos))
 
+        def should_delete(todel):
+            # If last_used_save_info is None, we should allow deletion
+            if self.last_used_save_info is None:
+                return True
+            return todel["timestamp"] != self.last_used_save_info["timestamp"]
+
         def delete_oldest(files, to_keep):
-            while len(files) > to_keep:
-                todel = files.pop()
+            index = len(files) - 1
+            while len(files) > to_keep and index >= 0:
+                todel = files[index]
+                # Check condition before deleting
+                if not should_delete(todel):
+                    logger.info(f'Skipping { todel } as it meets the condition')
+                    index -= 1
+                    continue
                 logger.info(f'Culling { todel }')
                 # if not self.dry_run: we ignore dryrun for culling otherwise our test system dir fills up
                 self._delete_savedir(todel["filename"])
+                files.pop(index)
+                index -= 1
 
         delete_oldest(undos, 1)
         delete_oldest(saves, self.max_saves)
@@ -730,10 +744,10 @@ class Engine:
         # then restore from our old snapshot
         logger.info(f'Attempting restore of { save_info }')
         self._copy_all_from_saveinfo(save_info, rcf)
+        self.last_used_save_info = save_info
 
         # we now might have too many undos, so possibly delete one
         await self._cull_old_saves()
-        self.last_used_save_info = save_info
 
     """
     Given a list of game_infos, return a list of game_infos which are supported for backups

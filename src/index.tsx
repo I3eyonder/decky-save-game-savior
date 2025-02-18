@@ -368,7 +368,7 @@ const SteambackContent: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
           const secondaryButton: ButtonConfig = {
             content: <MdDelete />,
             onClick: askDelete,
-            disabled: false,
+            disabled: lastUsedSaveInfo?.timestamp == si.timestamp,
             extraStyle: {
               maxWidth: '40px'
             }
